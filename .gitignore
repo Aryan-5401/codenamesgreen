@@ -1,0 +1,15 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+build/
+elm-stuff
+repl-temp-*
+node_modules
+.DS_Store
+.cache
+dist
