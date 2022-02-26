@@ -45,24 +45,27 @@ func Handler(wordLists map[string][]string) http.Handler {
 	h.mux.HandleFunc("/events", h.handleEvents)
 	h.mux.HandleFunc("/ping", h.handlePing)
 	h.mux.HandleFunc("/stats", h.handleStats)
+	h.mux.HandleFunc("/ids", h.handleIds)
+	h.mux.HandleFunc("/game", h.handleGame)
 
 	// Periodically remove games that are old and inactive.
-	go func() {
-		for now := range time.Tick(10 * time.Minute) {
-			h.mu.Lock()
-			for id, g := range h.games {
-				remaining := g.pruneOldPlayers(now)
-				if remaining > 0 {
-					continue // at least one player is still in the game
-				}
-				if g.CreatedAt.Add(24 * time.Hour).After(time.Now()) {
-					continue // hasn't been 24 hours since the game started
-				}
-				delete(h.games, id)
-			}
-			h.mu.Unlock()
-		}
-	}()
+	// let's NOT do this lol
+	// go func() {
+	// 	for now := range time.Tick(10 * time.Minute) {
+	// 		h.mu.Lock()
+	// 		for id, g := range h.games {
+	// 			remaining := g.pruneOldPlayers(now)
+	// 			if remaining > 0 {
+	// 				continue // at least one player is still in the game
+	// 			}
+	// 			if g.CreatedAt.Add(24 * time.Hour).After(time.Now()) {
+	// 				continue // hasn't been 24 hours since the game started
+	// 			}
+	// 			delete(h.games, id)
+	// 		}
+	// 		h.mu.Unlock()
+	// 	}
+	// }()
 
 	return h
 }
@@ -90,6 +93,41 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	h.mux.ServeHTTP(rw, req)
+}
+
+// POST /ids
+// get all the game ids in use
+func (h *handler) handleIds(rw http.ResponseWriter, req *http.Request) {
+	h.mu.Lock()
+	keys := make([]string, 0, len(h.games))
+	for id := range h.games {
+		keys = append(keys, id)
+	}
+	h.mu.Unlock()
+	writeJSON(rw, keys)
+}
+
+// POST /game
+// get the game state as a json (pretty big, can be ugly)
+func (h *handler) handleGame(rw http.ResponseWriter, req *http.Request) {
+	var body struct {
+		GameID   string   `json:"game_id"`
+	}
+
+	err := json.NewDecoder(req.Body).Decode(&body)
+	if err != nil || body.GameID == "" {
+		writeError(rw, "malformed_body", "Unable to parse request body.", 400)
+		return
+	}
+
+	h.mu.Lock()
+	g, ok := h.games[body.GameID]
+	h.mu.Unlock()
+	if !ok {
+		writeError(rw, "not_found", "Game not found", 404)
+		return
+	}
+	writeJSON(rw, g)
 }
 
 // POST /index
