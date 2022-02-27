@@ -122,8 +122,17 @@ update msg model =
         ( IdChanged id, Home _ ) ->
             ( { model | page = Home id }, Cmd.none )
 
-        ( SubmitNewGame, Home id ) ->
-            ( model, Nav.pushUrl model.key (UrlBuilder.relative [ id ] []) )
+        -- ( SubmitNewGame, Home id ) ->
+        --     ( model, Nav.pushUrl model.key (UrlBuilder.relative [ id ] []) )
+
+        ( SubmitNewGame, _ ) ->
+            ( model, Api.maybeMakeGame
+            { name = model.user.name
+            , playerId = model.user.id
+            , prevSeed = Nothing
+            , toMsg = GotGame
+            , client = model.apiClient
+            } ) 
 
         ( NextGame, GameInProgress game _ _ ) ->
             stepGameView model game.id (Just game.seed)
@@ -142,6 +151,13 @@ update msg model =
                     Game.init state model.user model.apiClient GameUpdate
             in
             ( { model | page = GameInProgress gameModel chat ShowDefault }, gameCmd )
+
+        ( GotGame (Ok state), Home id ) ->
+            let
+                ( gameModel, gameCmd ) =
+                    Game.init state model.user model.apiClient GameUpdate
+            in
+            ( { model | page = GameInProgress gameModel "" ShowDefault }, gameCmd )
 
         ( GotGame (Ok state), GameLoading id ) ->
             let

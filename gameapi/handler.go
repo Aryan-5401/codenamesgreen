@@ -49,7 +49,7 @@ func Handler(wordLists map[string][]string) http.Handler {
 	h.mux.HandleFunc("/game", h.handleGame)
 
 	// Periodically remove games that are old and inactive.
-	// let's NOT do this lol
+	// let's NOT do this for now...
 	// go func() {
 	// 	for now := range time.Tick(10 * time.Minute) {
 	// 		h.mu.Lock()
@@ -200,21 +200,30 @@ func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// can we auto-add them to an old game?
+	// first, is this player ALREADY in a game?
 	for _, g := range h.games {
 		g.mu.Lock()
-		defer g.mu.Unlock()
-		if len(g.players) == 1 {
-			g.players[body.PlayerID] = Player{Team: 1, Name: body.Name, LastSeen: time.Now()}
-			g.addEvent(Event{
-				Type:     "join_side",
-				PlayerID: body.PlayerID,
-				Name:     body.Name,
-				Team:     1,
-			})
+		for k, _ := range g.players {
+			if k == body.PlayerID {
+				writeJSON(rw, g)
+				g.mu.Unlock()
+				return
+			}
+		}
+		g.mu.Unlock()
+	}
+	
 
+	// if not, let's find a game with one player
+	for _, g := range h.games {
+		g.mu.Lock()
+		if len(g.players) == 1 {
+			g.markSeen(body.PlayerID, body.Name, 2, time.Now())
 			writeJSON(rw, g)
+			g.mu.Unlock()
 			return
 		}
+		g.mu.Unlock()
 	}
 
 	// if we can't, create a new game
@@ -247,15 +256,7 @@ func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 	g := &game
 	g.CreatedAt = time.Now()
 
-	// add to team A
-	g.players[body.PlayerID] = Player{Team: 0, Name: body.Name, LastSeen: time.Now()}
-	g.addEvent(Event{
-		Type:     "join_side",
-		PlayerID: body.PlayerID,
-		Name:     body.Name,
-		Team:     0,
-	})
-
+	g.markSeen(body.PlayerID, body.Name, 1, time.Now())
 	h.games[newGameID] = g
 	writeJSON(rw, g)
 }
