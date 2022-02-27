@@ -222,7 +222,8 @@ stepGameView : Model -> String -> Maybe String -> ( Model, Cmd Msg )
 stepGameView model id prevSeed =
     ( { model | page = GameLoading id }
     , Api.maybeMakeGame
-        { gameId = id
+        { name = model.user.name
+        , playerId = model.user.id
         , prevSeed = prevSeed
         , toMsg = GotGame
         , client = model.apiClient
@@ -336,6 +337,8 @@ viewSidebar g chatMessage gameView =
                 |> List.length
     in
     case ( g.player.side, gameView ) of
+
+    -- this pattern-match won't run!
         ( Nothing, _ ) ->
             [ viewJoinASide playersOnSideA playersOnSideB ]
 
