@@ -95,6 +95,7 @@ type Game struct {
 	Words     []string  `json:"words"`
 	OneLayout []Color   `json:"one_layout"`
 	TwoLayout []Color   `json:"two_layout"`
+	GameID    string    `json:"game_id"`
 }
 
 func (gs *GameState) notifyAll() {
@@ -201,11 +202,12 @@ func (g *Game) pruneOldPlayers(now time.Time) (remaining int) {
 	return len(g.players)
 }
 
-func ReconstructGame(state GameState) (g Game) {
+func ReconstructGame(state GameState, gameId string) (g Game) {
 	g = Game{
 		GameState: state,
 		OneLayout: make([]Color, len(colorDistribution)),
 		TwoLayout: make([]Color, len(colorDistribution)),
+		GameID:    gameId,
 	}
 
 	rnd := rand.New(rand.NewSource(int64(state.Seed)))

@@ -431,21 +431,13 @@ viewHome id =
     { title = "Codenames Green"
     , body =
         [ div [ Attr.id "home" ]
-            [ h1 [] [ text "Codenames Green" ]
-            , p [] [ text "Play cooperative Codenames online across multiple devices on a shared board. To create a new game or join an existing game, enter a game identifier and click 'Play'." ]
+            [ h1 [] [ text "Codenames" ]
+            , p [] [ text "To start a game, click 'Play'." ]
             , form
                 [ Attr.id "new-game"
                 , onSubmit SubmitNewGame
                 ]
-                [ input
-                    [ Attr.id "game-id"
-                    , Attr.name "game-id"
-                    , Attr.value id
-                    , onInput IdChanged
-                    ]
-                    []
-                , button [] [ text "Play" ]
-                ]
+                [ button [] [ text "Play" ] ]
             ]
         ]
     }

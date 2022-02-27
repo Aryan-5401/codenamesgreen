@@ -151,15 +151,25 @@ func (h *handler) handleIndex(rw http.ResponseWriter, req *http.Request) {
 	}{id})
 }
 
+func randomString(length int) string {
+    rand.Seed(time.Now().UnixNano())
+    b := make([]byte, length)
+    rand.Read(b)
+    return fmt.Sprintf("%x", b)[:length]
+}
+
 // POST /new-game
 func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 	var body struct {
-		GameID   string   `json:"game_id"`
+		GameID   *string   `json:"game_id,omitempty"`
 		Words    []string `json:"words,omitempty"`
 		PrevSeed *Seed    `json:"prev_seed,omitempty"` // a string because of js number precision
+		PlayerID string	  `json:"player_id"`
+		Name     string   `json:"name"`
 	}
+	
 	err := json.NewDecoder(req.Body).Decode(&body)
-	if err != nil || body.GameID == "" {
+	if err != nil {
 		writeError(rw, "malformed_body", "Unable to parse request body.", 400)
 		return
 	}
@@ -167,18 +177,48 @@ func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	// If the game already exists, make sure that the request includes
-	// the existing game's seed so a delayed request doesn't reset an
-	// existing game.
-	oldGame, ok := h.games[body.GameID]
-	if ok {
-		oldGame.mu.Lock()
-		defer oldGame.mu.Unlock()
+	// if the game ID is specified, return that game-
+	if body.GameID != nil {
+		oldGame, ok := h.games[*body.GameID]
+		if ok {
+			oldGame.mu.Lock()
+			defer oldGame.mu.Unlock()
+		}
+
+
+		if len(oldGame.players) >= 2 {
+			writeError(rw, "game_full", "The game is already full.", 400)
+			return
+		}
+
+		// the user is in the game-
+		if ok && (body.PrevSeed == nil || *body.PrevSeed != oldGame.Seed) {
+			writeJSON(rw, oldGame)
+			return
+		}
+
 	}
-	if ok && (body.PrevSeed == nil || *body.PrevSeed != oldGame.Seed) {
-		writeJSON(rw, oldGame)
-		return
+
+	// can we auto-add them to an old game?
+	for _, g := range h.games {
+		g.mu.Lock()
+		defer g.mu.Unlock()
+		if len(g.players) == 1 {
+			g.players[body.PlayerID] = Player{Team: 1, Name: body.Name, LastSeen: time.Now()}
+			g.addEvent(Event{
+				Type:     "join_side",
+				PlayerID: body.PlayerID,
+				Name:     body.Name,
+				Team:     1,
+			})
+
+			writeJSON(rw, g)
+			return
+		}
 	}
+
+	// if we can't, create a new game
+	newGameID := randomString(8)
 
 	words := body.Words
 	if len(words) == 0 {
@@ -190,21 +230,33 @@ func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	game := ReconstructGame(NewState(h.rand.Int63(), words))
-	if oldGame != nil {
-		// Carry over the players but without teams in case
-		// they want to switch them up.
-		for id, p := range oldGame.players {
-			game.players[id] = Player{LastSeen: p.LastSeen}
-		}
+	game := ReconstructGame(NewState(h.rand.Int63(), words), newGameID)
 
-		// Wake up any clients waiting on this game.
-		oldGame.notifyAll()
-	}
+	// comment out carry-over behaviour - we don't need this.
+	// if oldGame != nil {
+	// 	// Carry over the players but without teams in case
+	// 	// they want to switch them up.
+	// 	for id, p := range oldGame.players {
+	// 		game.players[id] = Player{LastSeen: p.LastSeen}
+	// 	}
+
+	// 	// Wake up any clients waiting on this game.
+	// 	oldGame.notifyAll()
+	// }
 
 	g := &game
 	g.CreatedAt = time.Now()
-	h.games[body.GameID] = g
+
+	// add to team A
+	g.players[body.PlayerID] = Player{Team: 0, Name: body.Name, LastSeen: time.Now()}
+	g.addEvent(Event{
+		Type:     "join_side",
+		PlayerID: body.PlayerID,
+		Name:     body.Name,
+		Team:     0,
+	})
+
+	h.games[newGameID] = g
 	writeJSON(rw, g)
 }
 
