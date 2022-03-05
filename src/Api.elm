@@ -21,7 +21,7 @@ import Json.Encode as E
 import Player exposing (Player)
 import Side exposing (Side)
 import Url
-
+import Array
 
 init : Url.Url -> Client
 init url =
@@ -63,7 +63,7 @@ type alias Event =
     , name : String
     , side : Maybe Side
     , index : Int
-    , message : String
+    , message : Array.Array String
     }
 
 
@@ -177,7 +177,7 @@ chat :
     , seed : String
     , player : Player
     , toMsg : Result Http.Error () -> msg
-    , message : String
+    , message : Array.Array String
     , client : Client
     }
     -> Cmd msg
@@ -192,7 +192,7 @@ chat r =
                     , ( "player_id", E.string r.player.user.id )
                     , ( "name", E.string r.player.user.name )
                     , ( "team", Side.encodeMaybe r.player.side )
-                    , ( "message", E.string r.message )
+                    , ( "message", E.array E.string r.message )
                     ]
                 )
         , expect = Http.expectWhatever r.toMsg
@@ -293,4 +293,10 @@ decodeEvent =
         (D.field "name" D.string)
         (D.field "team" Side.decodeMaybe)
         (D.field "index" D.int)
-        (D.field "message" D.string)
+        (D.oneOf 
+            [
+                D.field "message" (D.array D.string)
+                , D.succeed (Array.repeat 6 "")
+            ]
+        )
+        

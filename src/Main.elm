@@ -5,6 +5,7 @@ import Browser
 import Browser.Navigation as Nav
 import Dict
 import Game
+import Array
 import Html exposing (Html, a, button, div, form, h1, h2, h3, i, input, label, p, span, strong, text)
 import Html.Attributes as Attr
 import Html.Events exposing (onBlur, onClick, onInput, onSubmit)
@@ -18,8 +19,7 @@ import Url.Builder as UrlBuilder
 import Url.Parser as Parser exposing ((</>), Parser, map, oneOf, string, top)
 import Url.Parser.Query as Query
 import User
-
-
+import Array
 
 ---- MODEL ----
 
@@ -37,7 +37,7 @@ type Page
     | Error String
     | Home String
     | GameLoading String
-    | GameInProgress Game.Model String GameView
+    | GameInProgress Game.Model (Array.Array String) GameView
 
 
 type GameView
@@ -54,7 +54,7 @@ init encodedUser url key =
     case User.decode encodedUser of
         Err e ->
             ( { key = key
-              , user = User.User "" ""
+              , user = User.User "" "" "" "" ""
               , page = Error (Json.Decode.errorToString e)
               , apiClient = Api.init url
               }
@@ -85,7 +85,7 @@ type Msg
     | PickSide Side.Side
     | GameUpdate Game.Msg
     | GotGame (Result Http.Error Api.GameState)
-    | ChatMessageChanged String
+    | ChatMessageChanged (Array.Array String)
     | SendChat
     | ToggleSettings
     | SettingsEdit (Settings -> Settings)
@@ -157,14 +157,14 @@ update msg model =
                 ( gameModel, gameCmd ) =
                     Game.init state model.user model.apiClient GameUpdate
             in
-            ( { model | page = GameInProgress gameModel "" ShowDefault }, gameCmd )
+            ( { model | page = GameInProgress gameModel (Array.repeat 6 "")  ShowDefault }, gameCmd )
 
         ( GotGame (Ok state), GameLoading id ) ->
             let
                 ( gameModel, gameCmd ) =
                     Game.init state model.user model.apiClient GameUpdate
             in
-            ( { model | page = GameInProgress gameModel "" ShowDefault }, gameCmd )
+            ( { model | page = GameInProgress gameModel (Array.repeat 6 "") ShowDefault }, gameCmd )
 
         ( PickSide side, GameInProgress oldGame chat gameView ) ->
             let
@@ -191,7 +191,7 @@ update msg model =
             ( { model | page = GameInProgress g message gameView }, Cmd.none )
 
         ( SendChat, GameInProgress g message gameView ) ->
-            ( { model | page = GameInProgress g "" gameView }
+            ( { model | page = GameInProgress g (Array.repeat 6 "") gameView }
             , Api.chat
                 { gameId = g.id
                 , seed = g.seed
@@ -327,7 +327,7 @@ viewError msg =
         |> viewLayout (Just "Error")
 
 
-viewGameInProgress : Game.Model -> String -> GameView -> Browser.Document Msg
+viewGameInProgress : Game.Model -> (Array.Array String) -> GameView -> Browser.Document Msg
 viewGameInProgress g chatMessage gameView =
     div [ Attr.id "game" ]
         [ Html.map GameUpdate (Game.viewBoard g)
@@ -336,7 +336,7 @@ viewGameInProgress g chatMessage gameView =
         |> viewLayout Nothing
 
 
-viewSidebar : Game.Model -> String -> GameView -> List (Html Msg)
+viewSidebar : Game.Model -> Array.Array String -> GameView -> List (Html Msg)
 viewSidebar g chatMessage gameView =
     let
         sides =
@@ -388,7 +388,7 @@ viewSettings g settings =
     ]
 
 
-viewActiveSidebar : Game.Model -> Side.Side -> String -> List (Html Msg)
+viewActiveSidebar : Game.Model -> Side.Side -> Array.Array String -> List (Html Msg)
 viewActiveSidebar g side chatMessage =
     [ Html.map GameUpdate (lazy Game.viewStatus g)
     , Html.map GameUpdate (lazy2 Game.viewKeycard g side)
@@ -396,13 +396,25 @@ viewActiveSidebar g side chatMessage =
     , viewButtonRow
     ]
 
+getSubChat : Int -> Array.Array String -> String
+getSubChat idx messageArray =
+    Maybe.withDefault "" (Array.get idx messageArray)
 
-viewEventBox : Game.Model -> Side.Side -> String -> Html Msg
+setField : Int -> Array.Array String -> String -> Msg
+setField idx messageArray message =
+    ChatMessageChanged (Array.set idx message messageArray)
+
+viewEventBox : Game.Model -> Side.Side -> Array.Array String -> Html Msg
 viewEventBox g side chatMessage =
     div [ Attr.id "event-log" ]
         [ Html.map GameUpdate (Game.viewEvents g)
         , form [ Attr.id "chat-form", onSubmit SendChat ]
-            [ input [ Attr.value chatMessage, onInput ChatMessageChanged ] []
+            [ div [] [ text "Clue " , input [ Attr.value (getSubChat 0 chatMessage), onInput (setField 0 chatMessage) ] [] ]
+            , div [] [ text "Target " , input [ Attr.value (getSubChat 1 chatMessage), onInput (setField 1 chatMessage) ] [] ]
+            , div [] [ text "Target " , input [ Attr.value (getSubChat 2 chatMessage), onInput (setField 2 chatMessage) ] [] ]
+            , div [] [ text "Target " , input [ Attr.value (getSubChat 3 chatMessage), onInput (setField 3 chatMessage) ] [] ]
+            , div [] [ text "Target " , input [ Attr.value (getSubChat 4 chatMessage), onInput (setField 4 chatMessage) ] [] ]
+            , div [] [ text "Target " , input [ Attr.value (getSubChat 5 chatMessage), onInput (setField 5 chatMessage) ] [] ]
             , button [] [ text "Send" ]
             ]
         ]
@@ -411,7 +423,7 @@ viewEventBox g side chatMessage =
 viewButtonRow : Html Msg
 viewButtonRow =
     div [ Attr.id "button-row" ]
-        [ div [] [ button [ onClick NextGame ] [ text "Next game" ] ]
+        [ div [] [ ]
 
         -- TODO: add settings
         -- , div [] [ i [ Attr.id "open-settings", Attr.class "icon icon-button ion-ios-settings", onClick ToggleSettings ] [] ]

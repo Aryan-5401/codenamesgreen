@@ -440,7 +440,7 @@ viewEvents : Model -> Html Msg
 viewEvents model =
     Keyed.node "div"
         [ Attr.id "events" ]
-        (( "Welcome", viewWelcomeMessage )
+        (( "Welcome", viewWelcomeMessage model )
             :: (model.events
                     |> List.reverse
                     |> List.map (\e -> ( String.fromInt e.number, lazy2 viewEvent model e ))
@@ -448,9 +448,9 @@ viewEvents model =
         )
 
 
-viewWelcomeMessage : Html Msg
-viewWelcomeMessage =
-    div [ Attr.class "system-message" ] [ text """
+viewWelcomeMessage : Model -> Html Msg
+viewWelcomeMessage model =
+    div [] [ div [ Attr.class "system-message" ] [ text """
     Welcome! Codenames Green is a cooperative word game. Players divide into
     two sides. Each side has nine green words that they must provide clues for.
     Sides take turns giving one-word clues, plus a number indicating the
@@ -459,6 +459,11 @@ viewWelcomeMessage =
     Try to reveal all green words before the timer counter reaches 9.
     Good luck, have fun!
     """ ]
+    , div [] [ text ("Please copy the following 3 lines into MTurk when you are done!") ] 
+    , div [] [ text ("Your Username is: " ++ model.player.user.name) ] 
+    , div [] [ text ("Your User ID is: " ++ model.player.user.id) ] 
+    , div [] [ text ("Your Game ID is: " ++ model.id) ] 
+    ]
 
 
 viewEvent : Model -> Event -> Html Msg
@@ -500,7 +505,7 @@ viewEvent model e =
                         Nothing ->
                             text ""
             in
-            div [] [ text e.name, sideEl, text ": ", text e.message ]
+            div [] [ text e.name, sideEl, text ": ", text (Maybe.withDefault "" (Array.get 0 e.message)) ]
 
         "end_turn" ->
             case e.side of

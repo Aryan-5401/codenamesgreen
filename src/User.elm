@@ -17,6 +17,9 @@ sessions.
 type alias User =
     { id : String
     , name : String
+    , country: String
+    , gender: String
+    , age: String
     }
 
 
@@ -38,11 +41,17 @@ encode user =
     E.object
         [ ( "player_id", E.string user.id )
         , ( "name", E.string user.name )
+        , ( "country", E.string user.name )
+        , ( "gender", E.string user.name )
+        , ( "name", E.string user.name )
         ]
 
 
 decoder : D.Decoder User
 decoder =
-    D.map2 User
+    D.map5 User
         (D.field "player_id" D.string)
         (D.field "name" D.string)
+        (D.field "country" D.string)
+        (D.field "gender" D.string)
+        (D.field "age" D.string)

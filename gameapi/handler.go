@@ -111,7 +111,7 @@ func (h *handler) handleIds(rw http.ResponseWriter, req *http.Request) {
 // get the game state as a json (pretty big, can be ugly)
 func (h *handler) handleGame(rw http.ResponseWriter, req *http.Request) {
 	var body struct {
-		GameID   string   `json:"game_id"`
+		GameID string `json:"game_id"`
 	}
 
 	err := json.NewDecoder(req.Body).Decode(&body)
@@ -152,22 +152,22 @@ func (h *handler) handleIndex(rw http.ResponseWriter, req *http.Request) {
 }
 
 func randomString(length int) string {
-    rand.Seed(time.Now().UnixNano())
-    b := make([]byte, length)
-    rand.Read(b)
-    return fmt.Sprintf("%x", b)[:length]
+	rand.Seed(time.Now().UnixNano())
+	b := make([]byte, length)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)[:length]
 }
 
 // POST /new-game
 func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 	var body struct {
-		GameID   *string   `json:"game_id,omitempty"`
+		GameID   *string  `json:"game_id,omitempty"`
 		Words    []string `json:"words,omitempty"`
 		PrevSeed *Seed    `json:"prev_seed,omitempty"` // a string because of js number precision
-		PlayerID string	  `json:"player_id"`
+		PlayerID string   `json:"player_id"`
 		Name     string   `json:"name"`
 	}
-	
+
 	err := json.NewDecoder(req.Body).Decode(&body)
 	if err != nil {
 		writeError(rw, "malformed_body", "Unable to parse request body.", 400)
@@ -184,7 +184,6 @@ func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 			oldGame.mu.Lock()
 			defer oldGame.mu.Unlock()
 		}
-
 
 		if len(oldGame.players) >= 2 {
 			writeError(rw, "game_full", "The game is already full.", 400)
@@ -212,7 +211,6 @@ func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 		}
 		g.mu.Unlock()
 	}
-	
 
 	// if not, let's find a game with one player
 	for _, g := range h.games {
@@ -255,7 +253,13 @@ func (h *handler) handleNewGame(rw http.ResponseWriter, req *http.Request) {
 
 	g := &game
 	g.CreatedAt = time.Now()
-
+	// g.addEvent(Event{
+	// 	Type:     "chat",
+	// 	Team:     2,
+	// 	PlayerID: body.PlayerID,
+	// 	Name:     "MTurk Instruction",
+	// 	Message:  "Your GAME ID is: " + newGameID,
+	// })
 	g.markSeen(body.PlayerID, body.Name, 1, time.Now())
 	h.games[newGameID] = g
 	writeJSON(rw, g)
@@ -342,16 +346,18 @@ func (h *handler) handleEndTurn(rw http.ResponseWriter, req *http.Request) {
 // POST /chat
 func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 	var body struct {
-		GameID   string `json:"game_id"`
-		Seed     Seed   `json:"seed"`
-		PlayerID string `json:"player_id"`
-		Name     string `json:"name"`
-		Team     int    `json:"team"`
-		Message  string `json:"message"`
+		GameID   string   `json:"game_id"`
+		Seed     Seed     `json:"seed"`
+		PlayerID string   `json:"player_id"`
+		Name     string   `json:"name"`
+		Team     int      `json:"team"`
+		Message  []string `json:"message"`
 	}
 
 	err := json.NewDecoder(req.Body).Decode(&body)
-	if err != nil || body.GameID == "" || body.Team == 0 || body.PlayerID == "" || body.Message == "" {
+
+	if err != nil || body.GameID == "" || body.Team == 0 || body.PlayerID == "" ||
+		len(body.Message) < 2 || body.Message[0] == "" || body.Message[1] == "" {
 		writeError(rw, "malformed_body", "Unable to parse request body.", 400)
 		return
 	}
