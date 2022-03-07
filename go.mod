@@ -1,2 +1,2 @@
 module codenamesgreen
-// +heroku goVersion go1.11
+// +heroku goVersion go1.17
