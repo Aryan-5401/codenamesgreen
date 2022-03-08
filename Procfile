@@ -1,1 +1,1 @@
-web: go run cmd/greenapid/main.go
+web: bin/greenapid
