@@ -12,10 +12,7 @@ func main() {
 		panic(err)
 	}
 	h := gameapi.Handler(wordLists)
-	port, err := os.Getenv("PORT")
-    if err != nil {
-        port = ":3000"
-    } 
+	port := os.Getenv("PORT")
 	err = http.ListenAndServe(port, h)
 	panic(err)
 }
