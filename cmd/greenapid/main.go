@@ -1,8 +1,8 @@
 package main
 
 import (
+	"os"
 	"net/http"
-
 	"codenamesgreen/gameapi"
 )
 
@@ -11,8 +11,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	h := gameapi.Handler(wordLists)
-	err = http.ListenAndServe(":0", h)
+	port, err := os.Getenv("PORT")
+    if err != nil {
+        port = ":3000"
+    } 
+	err = http.ListenAndServe(port, h)
 	panic(err)
 }
