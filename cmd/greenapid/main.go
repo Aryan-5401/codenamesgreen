@@ -13,6 +13,6 @@ func main() {
 	}
 
 	h := gameapi.Handler(wordLists)
-	err = http.ListenAndServe(":8080", h)
+	err = http.ListenAndServe(":0", h)
 	panic(err)
 }
