@@ -33,7 +33,7 @@ init url =
 
                 "www.codenamesgreen.com" ->
                     -- TODO: Avoid hardcoding any specific hostnames.
-                    { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
+                    { url | host = "api.codenamesgreen.com", path = "", query = Nothing, fragment = Nothing }
 
                 _ ->
                     { url | host = "api." ++ url.host, path = "", query = Nothing, fragment = Nothing }
