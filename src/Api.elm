@@ -29,14 +29,14 @@ init url =
         baseUrl =
             case url.host of
                 "localhost" ->
-                    { url | port_ = Just 8080, path = "", query = Nothing, fragment = Nothing }
+                    { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
 
                 "www.codenamesgreen.com" ->
                     -- TODO: Avoid hardcoding any specific hostnames.
                     { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
 
                 _ ->
-                    { url | host = "api." ++ url.host, path = "", query = Nothing, fragment = Nothing }
+                    { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
     in
     { baseUrl = baseUrl }
 
