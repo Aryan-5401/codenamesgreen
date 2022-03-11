@@ -31,7 +31,7 @@ init url =
                 "localhost" ->
                     { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
 
-                "www.codenamesgreen.com" ->
+                "https://aryan-5401.github.io/codenameswebsite" ->
                     -- TODO: Avoid hardcoding any specific hostnames.
                     { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
 
