@@ -29,11 +29,11 @@ init url =
         baseUrl =
             case url.host of
                 "localhost" ->
-                    { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
+                    { url | port_ = Just 8080, path = "", query = Nothing, fragment = Nothing }
 
                 "https://aryan-5401.github.io/codenameswebsite" ->
                     -- TODO: Avoid hardcoding any specific hostnames.
-                    { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
+                    { url | host = "https://aryan-5401.github.io/codenameswebsite", path = "", query = Nothing, fragment = Nothing }
 
                 _ ->
                     { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
