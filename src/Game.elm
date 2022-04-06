@@ -505,7 +505,7 @@ viewEvent model e =
                         Nothing ->
                             text ""
             in
-            div [] [ text e.name, sideEl, text ": ", text (Maybe.withDefault "" (Array.get 0 e.message)) ]
+            div [] [ text e.name, sideEl, text ": ", text (Maybe.withDefault "" (Array.get 0 e.message)), ((Array.length e.message)-1) ]
 
         "end_turn" ->
             case e.side of
