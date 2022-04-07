@@ -31,9 +31,9 @@ init url =
                 "localhost" ->
                     { url | port_ = Just 8080, path = "", query = Nothing, fragment = Nothing }
 
-                "https://aryan-5401.github.io/codenameswebsite" ->
+                "https://aryan-5401.github.io/codenamesgreen" ->
                     -- TODO: Avoid hardcoding any specific hostnames.
-                    { url | host = "https://aryan-5401.github.io/codenameswebsite", path = "", query = Nothing, fragment = Nothing }
+                    { url | host = "https://aryan-5401.github.io/codenamesgreen", path = "", query = Nothing, fragment = Nothing }
 
                 _ ->
                     { url | host = "codenamesgreen.herokuapp.com", path = "", query = Nothing, fragment = Nothing }
