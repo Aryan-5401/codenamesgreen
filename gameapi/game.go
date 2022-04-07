@@ -64,13 +64,14 @@ type GameState struct {
 }
 
 type Event struct {
-	Number   int      `json:"number"`
-	Type     string   `json:"type"`
-	PlayerID string   `json:"player_id"`
-	Name     string   `json:"name"`
-	Team     int      `json:"team"`
-	Index    int      `json:"index"`
-	Message  []string `json:"message"`
+	Number           int      `json:"number"`
+	Type             string   `json:"type"`
+	PlayerID         string   `json:"player_id"`
+	Name             string   `json:"name"`
+	Team             int      `json:"team"`
+	Index            int      `json:"index"`
+	Message          []string `json:"message"`
+	Num_target_words int      `json:"num_target_words"`
 }
 
 type Player struct {

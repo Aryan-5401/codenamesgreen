@@ -376,14 +376,35 @@ func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 		writeError(rw, "bad_seed", "Request intended for a different game seed.", 400)
 		return
 	}
-
+	for index, element := range body.Message {
+		if index >= 1 && element != "" {
+			found := false
+			for _, board_word := range g.Words {
+				if strings.ToLower(board_word) == strings.ToLower(element) {
+					found = true
+					break
+				}
+			}
+			if found == false {
+				writeError(rw, "malformed_body", "Unable to parse request body.", 400)
+				return
+			}
+		}
+	}
+	numtargets := 0
+	for index, element := range body.Message {
+		if index >= 1 && element != "" {
+			numtargets = numtargets + 1
+		}
+	}
 	g.markSeen(body.PlayerID, body.Name, body.Team, time.Now())
 	g.addEvent(Event{
-		Type:     "chat",
-		Team:     body.Team,
-		PlayerID: body.PlayerID,
-		Name:     body.Name,
-		Message:  body.Message,
+		Type:             "chat",
+		Team:             body.Team,
+		PlayerID:         body.PlayerID,
+		Name:             body.Name,
+		Message:          body.Message,
+		Num_target_words: numtargets,
 	})
 	writeJSON(rw, map[string]string{"status": "ok"})
 }

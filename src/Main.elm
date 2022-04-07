@@ -199,6 +199,7 @@ update msg model =
                 , toMsg = always NoOp
                 , message = message
                 , client = model.apiClient
+                , num_target_words = 69
                 }
             )
 
