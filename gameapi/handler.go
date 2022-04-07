@@ -391,6 +391,12 @@ func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}
+	for _, board_word := range g.Words {
+		if strings.ToLower(board_word) == strings.ToLower(strings.TrimSpace(body.Message[0])) {
+			writeError(rw, "malformed_body", "Unable to parse request body.", 400)
+			return
+		}
+	}
 	numtargets := 0
 	for index, element := range body.Message {
 		if index >= 1 && element != "" {
