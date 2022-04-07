@@ -16,5 +16,8 @@
   "scripts": {
     "deploy": "gh-pages -d dist"
   },
-  "homepage": "https://Aryan-5401.github.io/codenamesgreen"
+  "homepage": "https://Aryan-5401.github.io/codenamesgreen",
+  "dependencies": {
+    "gh-pages": "^3.2.3"
+  }
 }
