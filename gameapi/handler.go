@@ -380,7 +380,7 @@ func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 		if index >= 1 && element != "" {
 			found := false
 			for _, board_word := range g.Words {
-				if strings.ToLower(board_word) == strings.ToLower(element) {
+				if strings.ToLower(board_word) == strings.ToLower(strings.TrimSpace(element)) {
 					found = true
 					break
 				}
