@@ -454,7 +454,7 @@ viewWelcomeMessage model =
     Welcome! Codenames Green is a cooperative word game. Players divide into
     two sides. Each side has nine green words that they must provide clues for.
     Sides take turns giving one-word clues, and the target words on the board 
-    that it applies to according to you. Then the other side guesses until they tap
+    that it applies to according to the cluegiver. Then the other side guesses until they tap
     a non-green word or choose to stop. Tapping a black instantly loses the game.
     Try to reveal all green words before the timer counter reaches 9.
     Good luck, have fun!
