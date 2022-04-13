@@ -18,6 +18,7 @@ import Color exposing (Color)
 import Http
 import Json.Decode as D
 import Json.Encode as E
+import Json.Decode.Extra as DExtra
 import Player exposing (Player)
 import Side exposing (Side)
 import Url
@@ -65,6 +66,7 @@ type alias Event =
     , index : Int
     , message : Array.Array String
     , num_target_words : Int
+    , rationale : String
     }
 
 
@@ -181,6 +183,7 @@ chat :
     , message : Array.Array String
     , client : Client
     , num_target_words : Int
+    , rationale : String
     }
     -> Cmd msg
 chat r =
@@ -195,7 +198,8 @@ chat r =
                     , ( "name", E.string r.player.user.name )
                     , ( "team", Side.encodeMaybe r.player.side )
                     , ( "message", E.array E.string r.message )
-                    , ( "num_target_words", E.int r.num_target_words)
+                    , ( "num_target_words", E.int r.num_target_words )
+                    , ( "rationale", E.string r.rationale )
                     ]
                 )
         , expect = Http.expectWhatever r.toMsg
@@ -289,17 +293,18 @@ decodeUpdate =
 
 decodeEvent : D.Decoder Event
 decodeEvent =
-    D.map8 Event
-        (D.field "number" D.int)
-        (D.field "type" D.string)
-        (D.field "player_id" D.string)
-        (D.field "name" D.string)
-        (D.field "team" Side.decodeMaybe)
-        (D.field "index" D.int)
-        (D.oneOf 
+    D.succeed Event
+        |> DExtra.andMap (D.field "number" D.int)
+        |> DExtra.andMap (D.field "type" D.string)
+        |> DExtra.andMap (D.field "player_id" D.string)
+        |> DExtra.andMap (D.field "name" D.string)
+        |> DExtra.andMap (D.field "team" Side.decodeMaybe)
+        |> DExtra.andMap (D.field "index" D.int)
+        |> DExtra.andMap (D.oneOf 
             [
                 D.field "message" (D.array D.string)
-                , D.succeed (Array.repeat 6 "")
+                , D.succeed (Array.repeat 7 "")
             ]
         )
-        (D.field "num_target_words" D.int)
+        |> DExtra.andMap (D.field "num_target_words" D.int)
+        |> DExtra.andMap (D.field "rationale" D.string)

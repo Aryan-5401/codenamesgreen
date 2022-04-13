@@ -72,6 +72,7 @@ type Event struct {
 	Index            int      `json:"index"`
 	Message          []string `json:"message"`
 	Num_target_words int      `json:"num_target_words"`
+	Rationale        string   `json:"rationale"`
 }
 
 type Player struct {

@@ -346,12 +346,13 @@ func (h *handler) handleEndTurn(rw http.ResponseWriter, req *http.Request) {
 // POST /chat
 func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 	var body struct {
-		GameID   string   `json:"game_id"`
-		Seed     Seed     `json:"seed"`
-		PlayerID string   `json:"player_id"`
-		Name     string   `json:"name"`
-		Team     int      `json:"team"`
-		Message  []string `json:"message"`
+		GameID    string   `json:"game_id"`
+		Seed      Seed     `json:"seed"`
+		PlayerID  string   `json:"player_id"`
+		Name      string   `json:"name"`
+		Team      int      `json:"team"`
+		Message   []string `json:"message"`
+		Rationale string   `json:"rationale"`
 	}
 
 	err := json.NewDecoder(req.Body).Decode(&body)
@@ -377,7 +378,7 @@ func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	for index, element := range body.Message {
-		if index >= 1 && element != "" {
+		if index >= 1 && index <= 5 && element != "" {
 			found := false
 			for _, board_word := range g.Words {
 				if strings.ToLower(board_word) == strings.ToLower(strings.TrimSpace(element)) {
@@ -399,7 +400,7 @@ func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 	}
 	numtargets := 0
 	for index, element := range body.Message {
-		if index >= 1 && element != "" {
+		if index >= 1 && index <= 5 && element != "" {
 			numtargets = numtargets + 1
 		}
 	}
@@ -409,8 +410,9 @@ func (h *handler) handleChat(rw http.ResponseWriter, req *http.Request) {
 		Team:             body.Team,
 		PlayerID:         body.PlayerID,
 		Name:             body.Name,
-		Message:          body.Message,
+		Message:          body.Message[0:6],
 		Num_target_words: numtargets,
+		Rationale:        body.Rationale,
 	})
 	writeJSON(rw, map[string]string{"status": "ok"})
 }

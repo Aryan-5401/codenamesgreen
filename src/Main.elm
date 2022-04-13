@@ -6,7 +6,7 @@ import Browser.Navigation as Nav
 import Dict
 import Game
 import Array
-import Html exposing (Html, a, button, div, form, h1, h2, h3, i, input, label, p, span, strong, text)
+import Html exposing (Html, a, button, div, form, h1, h2, h3, i, input, label, p, span, strong, text, textarea)
 import Html.Attributes as Attr
 import Html.Events exposing (onBlur, onClick, onInput, onSubmit)
 import Html.Lazy exposing (lazy, lazy2, lazy3)
@@ -157,14 +157,14 @@ update msg model =
                 ( gameModel, gameCmd ) =
                     Game.init state model.user model.apiClient GameUpdate
             in
-            ( { model | page = GameInProgress gameModel (Array.repeat 6 "")  ShowDefault }, gameCmd )
+            ( { model | page = GameInProgress gameModel (Array.repeat 7 "")  ShowDefault }, gameCmd )
 
         ( GotGame (Ok state), GameLoading id ) ->
             let
                 ( gameModel, gameCmd ) =
                     Game.init state model.user model.apiClient GameUpdate
             in
-            ( { model | page = GameInProgress gameModel (Array.repeat 6 "") ShowDefault }, gameCmd )
+            ( { model | page = GameInProgress gameModel (Array.repeat 7 "") ShowDefault }, gameCmd )
 
         ( PickSide side, GameInProgress oldGame chat gameView ) ->
             let
@@ -191,7 +191,7 @@ update msg model =
             ( { model | page = GameInProgress g message gameView }, Cmd.none )
 
         ( SendChat, GameInProgress g message gameView ) ->
-            ( { model | page = GameInProgress g (Array.repeat 6 "") gameView }
+            ( { model | page = GameInProgress g (Array.repeat 7 "") gameView }
             , Api.chat
                 { gameId = g.id
                 , seed = g.seed
@@ -199,7 +199,8 @@ update msg model =
                 , toMsg = always NoOp
                 , message = message
                 , client = model.apiClient
-                , num_target_words = 69
+                , num_target_words = -1
+                , rationale = Maybe.withDefault "" (Array.get 6 message)
                 }
             )
 
@@ -416,6 +417,7 @@ viewEventBox g side chatMessage =
             , div [] [ text "Target " , input [ Attr.value (getSubChat 3 chatMessage), onInput (setField 3 chatMessage) ] [] ]
             , div [] [ text "Target " , input [ Attr.value (getSubChat 4 chatMessage), onInput (setField 4 chatMessage) ] [] ]
             , div [] [ text "Target " , input [ Attr.value (getSubChat 5 chatMessage), onInput (setField 5 chatMessage) ] [] ]
+            , div [] [ text "Rationale/ \n \n Explanation \n \n" , textarea [Attr.rows 3, Attr.cols 40, Attr.value (getSubChat 6 chatMessage), onInput (setField 6 chatMessage) ] [] ]
             , button [] [ text "Send" ]
             ]
         ]
