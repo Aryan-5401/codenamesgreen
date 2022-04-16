@@ -10,7 +10,7 @@ import Html exposing (Html, button, div, h3, i, li, span, text, ul)
 import Html.Attributes as Attr
 import Html.Events exposing (onClick)
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy2, lazy3)
+import Html.Lazy exposing (lazy2, lazy3, lazy4)
 import Http
 import Json.Decode as Dec
 import Json.Encode as Enc
@@ -92,6 +92,18 @@ lastEvent m =
         |> Maybe.map (\x -> x.number)
         |> Maybe.withDefault 0
 
+lastEventObj : Model -> Event
+lastEventObj m =
+    m.events
+        |> List.head
+        |> Maybe.withDefault (Event 0 "" "" "" (Just Side.A) 0 (Array.repeat 1 "") 0 "")
+
+secondLastEventObj : Model -> Event
+secondLastEventObj m =
+    m.events
+        |> List.drop 1 
+        |> List.head
+        |> Maybe.withDefault (Event 0 "" "" "" (Just Side.B) 0 (Array.repeat 1 "") 0 "")
 
 status : Model -> Status
 status g =
@@ -392,7 +404,7 @@ viewStatus model =
             div [ Attr.id "status", Attr.class "in-progress" ]
                 (List.append
                     (if Just turn == model.player.side then
-                        div [] [ text "You're guessing." ]
+                        div [] [ text "You're guessing. If you cannot click on any of the words on the board yet, please wait for the other side to send a clue in the chatbox first." ]
                             :: (if model.guessesThisTurn > 0 then
                                     -- You /must/ guess at least once.
                                     [ div [] [ button [ Attr.class "done-guessing", onClick DoneGuessing ] [ text "Done guessing" ] ] ]
@@ -402,7 +414,7 @@ viewStatus model =
                                )
 
                      else
-                        [ div [] [ text "You're clue giving." ] ]
+                        [ div [] [ text "You're clue giving. The other side cannot start guessing until you send a clue in the chatbox." ] ]
                     )
                     [ div [] [ text (String.fromInt greens), span [ Attr.class "green-icon" ] [] ]
                     , div [] [ text (String.fromInt tokensConsumed), text " ", i [ Attr.class "icon ion-ios-time" ] [] ]
@@ -432,7 +444,13 @@ viewBoard model =
         ]
         (model.cells
             |> Array.toList
-            |> List.map (\c -> ( c.word, lazy3 Cell.view model.player.side tapMsg c ))
+            |> List.map (\c -> ( c.word, lazy4 Cell.view model.player.side (not (List.isEmpty model.events 
+    || ((lastEventObj model).side == Just (Side.opposite (Maybe.withDefault Side.A (model.player.side))) && (lastEventObj model).typ /= "chat") 
+    || (List.length model.events >= 2
+    && (secondLastEventObj model).side == Just (Side.opposite (Maybe.withDefault Side.A (model.player.side))) 
+    && (secondLastEventObj model).typ /= "chat" 
+    && (lastEventObj model).side == Just (Side.opposite (Maybe.withDefault Side.A (model.player.side))) 
+    && (lastEventObj model).typ == "end_turn"))) tapMsg c ))
         )
 
 

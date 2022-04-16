@@ -5,7 +5,7 @@ import Html exposing (Html, div, i, text)
 import Html.Attributes as Attr
 import Html.Events exposing (onClick)
 import Side
-
+import Api exposing (Event)
 
 type alias Cell =
     { index : Int
@@ -91,8 +91,8 @@ isExposedAll cell =
             a && b
 
 
-view : Maybe Side.Side -> (Cell -> a) -> Cell -> Html a
-view viewerSide msg cell =
+view : Maybe Side.Side -> Bool -> (Cell -> a) -> Cell -> Html a
+view viewerSide chatSentOrNot msg cell =
     case display cell of
         ExposedGreen ->
             div [ Attr.class "cell", Attr.class "green" ] [ text cell.word ]
@@ -102,10 +102,7 @@ view viewerSide msg cell =
 
         Hidden guessedA guessedB ->
             let
-                pickable =
-                    viewerSide
-                        |> Maybe.map (\side -> (side == Side.A && not guessedB) || (side == Side.B && not guessedA))
-                        |> Maybe.withDefault False
+                pickable = (Maybe.withDefault False ((Maybe.map (\side -> (side == Side.A && not guessedB) || (side == Side.B && not guessedA))) viewerSide)) && chatSentOrNot
             in
             div
                 (condList
